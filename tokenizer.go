@@ -256,18 +256,18 @@ func (t *Tokenizer) findTokenEnd(pivot int) int {
 // CharData or <![CDATA[ CharData ]]>, this method will include it in the previous token.
 // It returns the new pivot and new position.
 func (t *Tokenizer) parseCharData(pivot, pos int) (newPivot, newPos int) {
-	for i := pos; ; i++ {
-		if i >= len(t.buf) {
+	i := pos
+	for {
+		p := bytes.IndexByte(t.buf[i:], '<')
+		if p == -1 {
 			pivot, i = t.memmoveRemainingBytes(pivot)
 			pos = i - 1
 			if t.err = t.manageBuffer(); t.err != nil {
 				break
 			}
-		}
-		if t.buf[i] != '<' {
 			continue
 		}
-
+		i += p
 		pos = i - 1
 		// Might be in the form of <![CDATA[ CharData ]]>
 		const prefix, suffix = "<![CDATA[", "]]>"
