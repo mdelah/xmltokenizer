@@ -356,70 +356,55 @@ func (t *Tokenizer) consumeNonTagIdentifier(b []byte) []byte {
 }
 
 func (t *Tokenizer) consumeTagName(b []byte) []byte {
-	var pos, fullpos int
-	for i := 0; i < len(b); i++ {
-		switch b[i] {
-		case '<':
-			if b[i+1] == '/' {
-				t.token.IsEndElement = true
-				i++
-			}
-			pos = i + 1
-			fullpos = i + 1
-		case ':':
-			t.token.Name.Prefix = trim(b[pos:i])
-			pos = i + 1
-		case '>', ' ', '\t', '\r', '\n': // e.g. <gpx>, <trkpt lat="-7.1872750" lon="110.3450230">
-			if b[i] == '>' && b[i-1] == '/' { // In case we encounter <name/>
-				i--
-			}
-			t.token.Name.Local = trim(b[pos:i])
-			t.token.Name.Full = trim(b[fullpos:i])
-			return b[i:]
-		}
+	b = b[1:]
+	if b[0] == '/' {
+		t.token.IsEndElement = true
+		b = b[1:]
+	}
+	pos := bytes.IndexAny(b, "> \t\r\n")
+	if b[pos] == '>' && len(b) > 1 && b[pos-1] == '/' {
+		pos--
+	}
+	t.token.Name.Full = trim(b[:pos])
+	b = b[pos:]
+	pos = bytes.IndexByte(t.token.Name.Full, ':')
+	if pos == -1 {
+		t.token.Name.Local = t.token.Name.Full
+	} else {
+		t.token.Name.Prefix = t.token.Name.Full[:pos]
+		t.token.Name.Local = t.token.Name.Full[pos+1:]
 	}
 	return b
 }
 
 func (t *Tokenizer) consumeAttrs(b []byte) []byte {
-	var prefix, local, full []byte
-	var pos, fullpos int
-	for i := 0; i < len(b); i++ {
-		switch b[i] {
-		case ':':
-			prefix = trim(b[pos:i])
-			pos = i + 1
-		case '=':
-			local = trim(b[pos:i])
-			full = trim(b[fullpos:i])
-			pos = i + 1
-		case '"':
-			for {
-				i++
-				if i+1 == len(b) {
-					return nil
-				}
-				if b[i] == '"' {
-					break
-				}
+	for {
+		pos := bytes.IndexAny(b, "=>")
+		if b[pos] == '>' {
+			if pos > 0 && b[pos-1] == '/' {
+				t.token.SelfClosing = true
 			}
-			if len(full) == 0 { // Ignore malformed attr
-				continue
-			}
-			t.token.Attrs = append(t.token.Attrs, Attr{
-				Name:  Name{Prefix: prefix, Local: local, Full: full},
-				Value: trim(b[pos+1 : i]),
-			})
-			prefix, local, full = nil, nil, nil
-			pos = i + 1
-			fullpos = i + 1
-		case '/':
-			t.token.SelfClosing = true
-		case '>':
-			return b[i+1:]
+			return b[pos+1:]
 		}
+		full := trim(b[:pos])
+		b = b[pos+1:]
+		pos = bytes.IndexByte(b, '"')
+		width := bytes.IndexByte(b[pos+1:], '"')
+		value := b[pos+1 : pos+width+1]
+		b = b[pos+width+2:]
+		colon := bytes.IndexByte(full, ':')
+		var prefix, local []byte
+		if colon == -1 {
+			local = full
+		} else {
+			prefix = full[:colon]
+			local = full[colon+1:]
+		}
+		t.token.Attrs = append(t.token.Attrs, Attr{
+			Name:  Name{Prefix: prefix, Local: local, Full: full},
+			Value: value,
+		})
 	}
-	return b
 }
 
 func (t *Tokenizer) consumeCharData(b []byte) {
