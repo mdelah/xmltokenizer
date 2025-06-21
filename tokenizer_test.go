@@ -132,14 +132,17 @@ func TestTokenWithInmemXML(t *testing.T) {
 			err: io.ErrUnexpectedEOF,
 		},
 		{
-			name: "unexpected quote before attr name",
+			name: "missing attr name",
 			xml:  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><a =\"ns2\"></a>",
 			expecteds: []xmltokenizer.Token{
 				{
 					Data:        []byte(`<?xml version="1.0" encoding="UTF-8"?>`),
 					SelfClosing: true,
 				},
-				{Name: xmltokenizer.Name{Local: []byte("a"), Full: []byte("a")}},
+				{
+					Name:  xmltokenizer.Name{Local: []byte("a"), Full: []byte("a")},
+					Attrs: []xmltokenizer.Attr{{xmltokenizer.Name{Local: []byte{}, Full: []byte{}}, []byte("ns2")}},
+				},
 				{Name: xmltokenizer.Name{Local: []byte("a"), Full: []byte("a")}, IsEndElement: true},
 			},
 		},
