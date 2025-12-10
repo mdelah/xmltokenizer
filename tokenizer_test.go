@@ -441,7 +441,10 @@ func TestTokenWithInmemXML(t *testing.T) {
 
 	for i, tc := range tt {
 		t.Run(fmt.Sprintf("[%d]: %s", i, tc.name), func(t *testing.T) {
-			checkTokens(t, bytes.NewReader([]byte(tc.xml)), tc.expecteds, tc.err)
+			open := func() (io.ReadCloser, error) {
+				return io.NopCloser(bytes.NewReader([]byte(tc.xml))), nil
+			}
+			checkTokens(t, open, tc.expecteds, tc.err)
 		})
 	}
 }
@@ -685,37 +688,41 @@ func TestTokenWithSmallXMLFiles(t *testing.T) {
 	for i, tc := range tt {
 		t.Run(fmt.Sprintf("[%d], %s", i, tc.filename), func(t *testing.T) {
 			path := filepath.Join("testdata", tc.filename)
-			f, err := os.Open(path)
-			if err != nil {
-				panic(err)
-			}
-			defer f.Close()
-			checkTokens(t, f, tc.expecteds, tc.err)
+			checkTokens(t, func() (io.ReadCloser, error) { return os.Open(path) }, tc.expecteds, tc.err)
 		})
 	}
 }
 
-func checkTokens(t *testing.T, r io.Reader, expected []xmltokenizer.Token, expectedErr error) {
+func checkTokens(t *testing.T, open func() (io.ReadCloser, error), expected []xmltokenizer.Token, expectedErr error) {
 	t.Helper()
-	tok := xmltokenizer.New(r, xmltokenizer.WithReadBufferSize(1))
-	for j := 0; ; j++ {
-		token, err := tok.Token()
-		if err == io.EOF {
-			if j != len(expected) {
-				t.Errorf("too few tokens; wanted %d but got %d", len(expected), j)
+	for _, bufferSize := range []int{1, 2, 3, 4, 5, 6, 7, 8} {
+		t.Run(fmt.Sprintf("buffer size %d", bufferSize), func(t *testing.T) {
+			r, err := open()
+			if err != nil {
+				t.Fatal(err)
 			}
-			break
-		}
-		if err != nil {
-			if !errors.Is(err, expectedErr) {
-				t.Fatalf("expected error: %v, got: %v", expectedErr, err)
-			}
-			return
-		}
+			defer r.Close()
+			tok := xmltokenizer.New(r, xmltokenizer.WithReadBufferSize(bufferSize))
+			for j := 0; ; j++ {
+				token, err := tok.Token()
+				if err == io.EOF {
+					if j != len(expected) {
+						t.Errorf("too few tokens; wanted %d but got %d", len(expected), j)
+					}
+					break
+				}
+				if err != nil {
+					if !errors.Is(err, expectedErr) {
+						t.Fatalf("expected error: %v, got: %v", expectedErr, err)
+					}
+					return
+				}
 
-		if diff := cmp.Diff(token, expected[j]); diff != "" {
-			t.Errorf("token #%d: got %#v; diff: %s", j+1, token, diff)
-		}
+				if diff := cmp.Diff(token, expected[j]); diff != "" {
+					t.Errorf("token #%d: got %#v; diff: %s", j+1, token, diff)
+				}
+			}
+		})
 	}
 }
 

@@ -158,7 +158,6 @@ func (t *Tokenizer) RawToken() ([]byte, error) {
 	if t.err != nil {
 		return nil, t.err
 	}
-	var pivot int
 	for {
 		// Find opening <
 		p := bytes.IndexByte(t.buf[t.cur:], '<')
@@ -170,15 +169,15 @@ func (t *Tokenizer) RawToken() ([]byte, error) {
 			}
 			return nil, t.err
 		}
-		pivot = t.cur + p
+		t.token.End.step(t.buf[t.cur : t.cur+p])
+		t.cur += p
 		break
 	}
 	for {
 		// Find closing >
-		pos := t.findTokenEnd(pivot)
+		pos := t.findTokenEnd(t.cur)
 		if pos == -1 {
-			t.token.End.step(t.buf[t.cur:pivot])
-			pivot, pos = t.memmoveRemainingBytes(pivot)
+			_, pos = t.memmoveRemainingBytes(t.cur)
 			t.err = t.manageBuffer()
 			if t.err == nil {
 				continue
@@ -186,20 +185,18 @@ func (t *Tokenizer) RawToken() ([]byte, error) {
 			if errors.Is(t.err, io.EOF) {
 				t.err = io.ErrUnexpectedEOF
 			}
-			return t.buf[pivot:pos], t.err
+			return t.buf[t.cur:pos], t.err
 		}
-		switch t.buf[pivot+1] {
+		switch t.buf[t.cur+1] {
 		default:
-			pivot, pos = t.parseCharData(pivot, pos)
+			_, pos = t.parseCharData(t.cur, pos)
 			pos++
 		case '?', '!':
 		}
-		pos = pivot + len(trimSuffix(t.buf[pivot:pos]))
-		t.token.End.step(t.buf[t.cur:pivot])
+		buf := trimSuffix(t.buf[t.cur:pos])
 		t.token.Begin = t.token.End
-		buf := t.buf[pivot:pos]
 		t.token.End.step(buf)
-		t.cur = pos
+		t.cur += len(buf)
 		return buf, nil
 	}
 }
