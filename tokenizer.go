@@ -24,7 +24,6 @@ const (
 // Tokenizer is a XML tokenizer.
 type Tokenizer struct {
 	r       io.Reader // reader provided by the client
-	n       int64     // the n read bytes counter
 	options options   // tokenizer's options
 	buf     []byte    // buffer that will grow as needed, large enough to hold a token (default max limit: 1MB)
 	cur     int       // cursor byte position
@@ -79,15 +78,15 @@ func WithAttrBufferSize(size int) Option {
 // New creates new XML tokenizer.
 func New(r io.Reader, opts ...Option) *Tokenizer {
 	t := new(Tokenizer)
-	t.Reset(r, opts...)
+	t.reset(r, opts...)
 	return t
 }
 
-// Reset resets the Tokenizer, maintaining storage for
-// future tokenization to reduce memory alloc.
-func (t *Tokenizer) Reset(r io.Reader, opts ...Option) {
+func (t *Tokenizer) reset(r io.Reader, opts ...Option) {
 	t.r, t.err = r, nil
-	t.n, t.cur = 0, 0
+	t.cur = 0
+	t.token.Begin = Pos{1, 1, 0}
+	t.token.End = Pos{1, 1, 0}
 
 	t.options = defaultOptions()
 	for i := range opts {
@@ -103,10 +102,10 @@ func (t *Tokenizer) Reset(r io.Reader, opts ...Option) {
 
 	switch size := t.options.readBufferSize; {
 	case cap(t.buf) >= size+defaultReadBufferSize:
-		t.buf = t.buf[:size:cap(t.buf)]
+		t.buf = t.buf[:0]
 	default:
 		// Create buffer with additional cap since we need to memmove remaining bytes
-		t.buf = make([]byte, size, size+defaultReadBufferSize)
+		t.buf = make([]byte, 0, size+defaultReadBufferSize)
 	}
 }
 
@@ -121,7 +120,9 @@ func (t *Tokenizer) Token() (token Token, err error) {
 	b, err := t.RawToken()
 	if err != nil {
 		if !errors.Is(err, io.EOF) {
-			err = fmt.Errorf("byte pos %d: %w", t.n, err)
+			pos := t.token.End
+			pos.step(t.buf[t.cur:])
+			err = fmt.Errorf("line: %d column: %d byte offset %d: %w", pos.Line, pos.Column, pos.Offset, err)
 		}
 		if len(b) == 0 || errors.Is(err, io.ErrUnexpectedEOF) {
 			return
@@ -176,6 +177,7 @@ func (t *Tokenizer) RawToken() ([]byte, error) {
 		// Find closing >
 		pos := t.findTokenEnd(pivot)
 		if pos == -1 {
+			t.token.End.step(t.buf[t.cur:pivot])
 			pivot, pos = t.memmoveRemainingBytes(pivot)
 			t.err = t.manageBuffer()
 			if t.err == nil {
@@ -192,7 +194,11 @@ func (t *Tokenizer) RawToken() ([]byte, error) {
 			pos++
 		case '?', '!':
 		}
-		buf := trim(t.buf[pivot:pos:cap(t.buf)])
+		pos = pivot + len(trimSuffix(t.buf[pivot:pos]))
+		t.token.End.step(t.buf[t.cur:pivot])
+		t.token.Begin = t.token.End
+		buf := t.buf[pivot:pos]
+		t.token.End.step(buf)
 		t.cur = pos
 		return buf, nil
 	}
@@ -330,8 +336,6 @@ func (t *Tokenizer) manageBuffer() error {
 
 	n, err := io.ReadAtLeast(t.r, t.buf[start:end], 1)
 	t.buf = t.buf[: start+n : cap(t.buf)]
-	t.n += int64(n)
-
 	return err
 }
 

@@ -1,6 +1,10 @@
 package xmltokenizer
 
-import "sync"
+import (
+	"bytes"
+	"sync"
+	"unicode/utf8"
+)
 
 var pool = sync.Pool{New: func() any { return new(Token) }}
 
@@ -30,6 +34,23 @@ type Token struct {
 	Data         []byte // Data could be a CharData or a CDATA, or maybe a RawToken if a tag starts with "<?" or "<!" (except "<![CDATA").
 	SelfClosing  bool   // True when a tag ends with "/>" e.g. <c r="E3" s="1" />. Also true when a tag starts with "<?" or "<!" (except "<![CDATA").
 	IsEndElement bool   // True when a tag start with "</" e.g. </gpx> or </gpxtpx:atemp>.
+	Begin, End   Pos    // Begin and end of this token within the stream.
+}
+
+type Pos struct {
+	Line   int // Line number (from 1)
+	Column int // Column number (from 1)
+	Offset int // Byte offset (from 0)
+}
+
+func (p *Pos) step(b []byte) {
+	p.Offset += len(b)
+	if nl := bytes.LastIndexByte(b, '\n'); nl == -1 {
+		p.Column += utf8.RuneCount(b)
+	} else {
+		p.Line += bytes.Count(b, []byte{'\n'})
+		p.Column = utf8.RuneCount(b[nl:])
+	}
 }
 
 // IsEndElementOf checks whether the given token represent a

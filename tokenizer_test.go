@@ -19,7 +19,12 @@ import (
 	"github.com/muktihari/xmltokenizer/internal/xlsx/schema"
 )
 
-var tokenHeader = xmltokenizer.Token{Data: []byte(`<?xml version="1.0" encoding="UTF-8"?>`), SelfClosing: true}
+var tokenHeader = xmltokenizer.Token{
+	Data:        []byte(`<?xml version="1.0" encoding="UTF-8"?>`),
+	SelfClosing: true,
+	Begin:       xmltokenizer.Pos{1, 1, 0},
+	End:         xmltokenizer.Pos{1, 39, 38},
+}
 
 func TestTokenWithInmemXML(t *testing.T) {
 	tt := []struct {
@@ -50,11 +55,15 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []byte(`<?xml version="1.0" encoding="UTF-8"?>`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{2, 1, 1},
+					End:         xmltokenizer.Pos{2, 39, 39},
 				},
 				{
 					Data: []byte("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\n" +
 						"	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{3, 1, 40},
+					End:         xmltokenizer.Pos{4, 60, 162},
 				},
 				{
 					Name: xmltokenizer.Name{Local: []byte("body"), Full: []byte("body")},
@@ -63,29 +72,41 @@ func TestTokenWithInmemXML(t *testing.T) {
 						{Name: xmltokenizer.Name{Local: []byte("xmlns"), Full: []byte("xmlns")}, Value: []byte("ns2")},
 						{Name: xmltokenizer.Name{Prefix: []byte("xmlns"), Local: []byte("tag"), Full: []byte("xmlns:tag")}, Value: []byte("ns3")},
 					},
+					Begin: xmltokenizer.Pos{5, 1, 163},
+					End:   xmltokenizer.Pos{6, 5, 219},
 				},
 				{
 					Name: xmltokenizer.Name{Local: []byte("hello"), Full: []byte("hello")},
 					Attrs: []xmltokenizer.Attr{
 						{Name: xmltokenizer.Name{Local: []byte("lang"), Full: []byte("lang")}, Value: []byte("en")},
 					},
-					Data: []byte("World &lt;&gt;&apos;&quot; &#x767d;&#40300;翔"),
+					Data:  []byte("World &lt;&gt;&apos;&quot; &#x767d;&#40300;翔"),
+					Begin: xmltokenizer.Pos{7, 2, 221},
+					End:   xmltokenizer.Pos{7, 63, 284},
 				},
 				{
 					Name:         xmltokenizer.Name{Local: []byte("hello"), Full: []byte("hello")},
 					IsEndElement: true,
+					Begin:        xmltokenizer.Pos{Line: 7, Column: 63, Offset: 284},
+					End:          xmltokenizer.Pos{Line: 7, Column: 71, Offset: 292},
 				},
 				{
-					Name: xmltokenizer.Name{Local: []byte("query"), Full: []byte("query")},
-					Data: []byte("&何; &is-it;"),
+					Name:  xmltokenizer.Name{Local: []byte("query"), Full: []byte("query")},
+					Data:  []byte("&何; &is-it;"),
+					Begin: xmltokenizer.Pos{8, 2, 294},
+					End:   xmltokenizer.Pos{8, 20, 314},
 				},
 				{
 					Name:         xmltokenizer.Name{Local: []byte("query"), Full: []byte("query")},
 					IsEndElement: true,
+					Begin:        xmltokenizer.Pos{Line: 8, Column: 20, Offset: 314},
+					End:          xmltokenizer.Pos{Line: 8, Column: 28, Offset: 322},
 				},
 				{
 					Name:        xmltokenizer.Name{Local: []byte("goodbye"), Full: []byte("goodbye")},
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{9, 2, 324},
+					End:         xmltokenizer.Pos{9, 13, 335},
 				},
 				{
 					Name: xmltokenizer.Name{Local: []byte("outer"), Full: []byte("outer")},
@@ -93,30 +114,44 @@ func TestTokenWithInmemXML(t *testing.T) {
 						{Name: xmltokenizer.Name{Prefix: []byte("foo"), Local: []byte("attr"), Full: []byte("foo:attr")}, Value: []byte("value")},
 						{Name: xmltokenizer.Name{Prefix: []byte("xmlns"), Local: []byte("tag"), Full: []byte("xmlns:tag")}, Value: []byte("ns4")},
 					},
+					Begin: xmltokenizer.Pos{10, 2, 337},
+					End:   xmltokenizer.Pos{10, 42, 377},
 				},
 				{
 					Name:        xmltokenizer.Name{Local: []byte("inner"), Full: []byte("inner")},
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{11, 2, 379},
+					End:         xmltokenizer.Pos{11, 10, 387},
 				},
 				{
 					Name:         xmltokenizer.Name{Local: []byte("outer"), Full: []byte("outer")},
 					IsEndElement: true,
+					Begin:        xmltokenizer.Pos{12, 2, 389},
+					End:          xmltokenizer.Pos{12, 10, 397},
 				},
 				{
-					Name: xmltokenizer.Name{Prefix: []byte("tag"), Local: []byte("name"), Full: []byte("tag:name")},
-					Data: []byte("Some text here."),
+					Name:  xmltokenizer.Name{Prefix: []byte("tag"), Local: []byte("name"), Full: []byte("tag:name")},
+					Data:  []byte("Some text here."),
+					Begin: xmltokenizer.Pos{13, 2, 399},
+					End:   xmltokenizer.Pos{14, 29, 438},
 				},
 				{
 					Name:         xmltokenizer.Name{Prefix: []byte("tag"), Local: []byte("name"), Full: []byte("tag:name")},
 					IsEndElement: true,
+					Begin:        xmltokenizer.Pos{15, 2, 440},
+					End:          xmltokenizer.Pos{15, 13, 451},
 				},
 				{
 					Name:         xmltokenizer.Name{Local: []byte("body"), Full: []byte("body")},
 					IsEndElement: true,
+					Begin:        xmltokenizer.Pos{16, 1, 452},
+					End:          xmltokenizer.Pos{16, 8, 459},
 				},
 				{
 					Data:        []byte("<!-- missing final newline -->"),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{16, 8, 459},
+					End:         xmltokenizer.Pos{16, 38, 489},
 				},
 			},
 		},
@@ -127,6 +162,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []byte(`<?xml version="1.0" encoding="UTF-8"?>`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 39, 38},
 				},
 			},
 			err: io.ErrUnexpectedEOF,
@@ -138,12 +175,21 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []byte(`<?xml version="1.0" encoding="UTF-8"?>`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 39, 38},
 				},
 				{
 					Name:  xmltokenizer.Name{Local: []byte("a"), Full: []byte("a")},
 					Attrs: []xmltokenizer.Attr{{xmltokenizer.Name{Local: []byte{}, Full: []byte{}}, []byte("ns2")}},
+					Begin: xmltokenizer.Pos{1, 39, 38},
+					End:   xmltokenizer.Pos{1, 49, 48},
 				},
-				{Name: xmltokenizer.Name{Local: []byte("a"), Full: []byte("a")}, IsEndElement: true},
+				{
+					Name:         xmltokenizer.Name{Local: []byte("a"), Full: []byte("a")},
+					IsEndElement: true,
+					Begin:        xmltokenizer.Pos{1, 49, 48},
+					End:          xmltokenizer.Pos{1, 53, 52},
+				},
 			},
 		},
 		{
@@ -154,6 +200,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 					Data:         []byte(`<?xml version="1.0" encoding="UTF-8"?>`),
 					SelfClosing:  true,
 					IsEndElement: false,
+					Begin:        xmltokenizer.Pos{1, 1, 0},
+					End:          xmltokenizer.Pos{1, 39, 38},
 				},
 				{Name: xmltokenizer.Name{Local: []byte("Image"), Full: []byte("Image")},
 					Attrs: []xmltokenizer.Attr{
@@ -167,6 +215,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 						},
 					},
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 39, 38},
+					End:         xmltokenizer.Pos{1, 111, 110},
 				},
 			},
 		},
@@ -188,6 +238,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 						},
 					},
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 20, 19},
 				},
 			},
 		},
@@ -209,6 +261,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 						},
 					},
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 21, 20},
 				},
 			},
 		},
@@ -236,6 +290,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 						},
 					},
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 31, 30},
 				},
 			},
 		},
@@ -251,6 +307,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 							Value: []uint8("foo/bar/baz"),
 						},
 					},
+					Begin: xmltokenizer.Pos{1, 1, 0},
+					End:   xmltokenizer.Pos{1, 28, 27},
 				},
 			},
 		},
@@ -266,6 +324,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 							Value: []uint8("foo>bar>baz"),
 						},
 					},
+					Begin: xmltokenizer.Pos{1, 1, 0},
+					End:   xmltokenizer.Pos{1, 28, 27},
 				},
 			},
 		},
@@ -276,10 +336,14 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []byte(`<!-->-->`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 9, 8},
 				},
 				{
 					Data:        []byte(`<!-- foo>bar>baz -->`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 9, 8},
+					End:         xmltokenizer.Pos{1, 29, 28},
 				},
 			},
 		},
@@ -290,10 +354,14 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []byte(`<!--<-->`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 9, 8},
 				},
 				{
 					Data:        []byte(`<!-- foo<bar<baz -->`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 9, 8},
+					End:         xmltokenizer.Pos{1, 29, 28},
 				},
 			},
 		},
@@ -304,6 +372,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []uint8("<?sample <foo> ?>"),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 18, 17},
 				},
 			},
 		},
@@ -314,6 +384,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []uint8(`<?sample " ?>`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 14, 13},
 				},
 			},
 		},
@@ -324,6 +396,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []uint8(`<!DOCTYPE ">" >`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 16, 15},
 				},
 			},
 		},
@@ -334,14 +408,20 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []uint8(`<!DOCTYPE [ <!-- <foo> --> ] >`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 31, 30},
 				},
 				{
 					Data:        []uint8(`<!DOCTYPE [ <!-- > --> ] >`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 31, 30},
+					End:         xmltokenizer.Pos{1, 57, 56},
 				},
 				{
 					Data:        []uint8(`<!DOCTYPE [ <!-- < --> ] >`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 57, 56},
+					End:         xmltokenizer.Pos{1, 83, 82},
 				},
 			},
 		},
@@ -352,6 +432,8 @@ func TestTokenWithInmemXML(t *testing.T) {
 				{
 					Data:        []uint8(`<!DOCTYPE [ <!-- " --> ] >`),
 					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 27, 26},
 				},
 			},
 		},
@@ -359,29 +441,7 @@ func TestTokenWithInmemXML(t *testing.T) {
 
 	for i, tc := range tt {
 		t.Run(fmt.Sprintf("[%d]: %s", i, tc.name), func(t *testing.T) {
-			tok := xmltokenizer.New(
-				bytes.NewReader([]byte(tc.xml)),
-				xmltokenizer.WithReadBufferSize(1), // Read per char so we can cover more code paths
-			)
-
-			for i := 0; ; i++ {
-				token, err := tok.Token()
-				if err == io.EOF {
-					if i != len(tc.expecteds) {
-						t.Fatalf("expected %d tokens, got %d", len(tc.expecteds), i)
-					}
-					break
-				}
-				if err != nil {
-					if !errors.Is(err, tc.err) {
-						t.Fatalf("expected error: %v, got: %v", tc.err, err)
-					}
-					return
-				}
-				if diff := cmp.Diff(token, tc.expecteds[i]); diff != "" {
-					t.Fatalf("%d: %s", i, diff)
-				}
-			}
+			checkTokens(t, bytes.NewReader([]byte(tc.xml)), tc.expecteds, tc.err)
 		})
 	}
 }
@@ -394,85 +454,147 @@ func TestTokenWithSmallXMLFiles(t *testing.T) {
 	}{
 		{filename: "cdata.xml", expecteds: []xmltokenizer.Token{
 			tokenHeader,
-			{Name: xmltokenizer.Name{Local: []byte("content"), Full: []byte("content")}},
 			{
-				Name: xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
-				Data: []byte("text"),
+				Name:  xmltokenizer.Name{Local: []byte("content"), Full: []byte("content")},
+				Begin: xmltokenizer.Pos{Line: 2, Column: 1, Offset: 39},
+				End:   xmltokenizer.Pos{Line: 2, Column: 10, Offset: 48},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				Data:  []byte("text"),
+				Begin: xmltokenizer.Pos{Line: 3, Column: 3, Offset: 51},
+				End:   xmltokenizer.Pos{Line: 4, Column: 23, Offset: 80},
 			},
 			{
 				Name:         xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
 				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 5, Column: 3, Offset: 83},
+				End:          xmltokenizer.Pos{Line: 5, Column: 10, Offset: 90},
 			},
 			{
-				Name: xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
-				Data: []byte("<element>text</element>"),
-			},
-			{
-				Name:         xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
-				IsEndElement: true,
-			},
-			{
-				Name: xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
-				Data: []byte("<element>text</element>"),
+				Name:  xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				Data:  []byte("<element>text</element>"),
+				Begin: xmltokenizer.Pos{Line: 6, Column: 3, Offset: 93},
+				End:   xmltokenizer.Pos{Line: 7, Column: 40, Offset: 139},
 			},
 			{
 				Name:         xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
 				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 8, Column: 3, Offset: 142},
+				End:          xmltokenizer.Pos{Line: 8, Column: 10, Offset: 149},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				Data:  []byte("<element>text</element>"),
+				Begin: xmltokenizer.Pos{Line: 9, Column: 3, Offset: 152},
+				End:   xmltokenizer.Pos{Line: 12, Column: 8, Offset: 210},
+			},
+			{
+				Name:         xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 13, Column: 3, Offset: 213},
+				End:          xmltokenizer.Pos{Line: 13, Column: 10, Offset: 220},
 			},
 			{
 				Name:         xmltokenizer.Name{Local: []byte("content"), Full: []byte("content")},
 				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 14, Column: 1, Offset: 221},
+				End:          xmltokenizer.Pos{Line: 14, Column: 11, Offset: 231},
 			},
 		}},
 		{filename: "cdata_clrf.xml", expecteds: []xmltokenizer.Token{
 			tokenHeader,
-			{Name: xmltokenizer.Name{Local: []byte("content"), Full: []byte("content")}},
 			{
-				Name: xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
-				Data: []byte("text"),
+				Name:  xmltokenizer.Name{Local: []byte("content"), Full: []byte("content")},
+				Begin: xmltokenizer.Pos{Line: 2, Column: 1, Offset: 39},
+				End:   xmltokenizer.Pos{Line: 2, Column: 10, Offset: 48},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				Data:  []byte("text"),
+				Begin: xmltokenizer.Pos{Line: 3, Column: 3, Offset: 51},
+				End:   xmltokenizer.Pos{Line: 4, Column: 23, Offset: 80},
 			},
 			{
 				Name:         xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
 				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 5, Column: 3, Offset: 83},
+				End:          xmltokenizer.Pos{Line: 5, Column: 10, Offset: 90},
 			},
 			{
-				Name: xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
-				Data: []byte("<element>text</element>"),
-			},
-			{
-				Name:         xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
-				IsEndElement: true,
-			},
-			{
-				Name: xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
-				Data: []byte("<element>text</element>"),
+				Name:  xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				Data:  []byte("<element>text</element>"),
+				Begin: xmltokenizer.Pos{Line: 6, Column: 3, Offset: 93},
+				End:   xmltokenizer.Pos{Line: 7, Column: 40, Offset: 139},
 			},
 			{
 				Name:         xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
 				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 8, Column: 3, Offset: 142},
+				End:          xmltokenizer.Pos{Line: 8, Column: 10, Offset: 149},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				Data:  []byte("<element>text</element>"),
+				Begin: xmltokenizer.Pos{Line: 9, Column: 3, Offset: 152},
+				End:   xmltokenizer.Pos{Line: 12, Column: 8, Offset: 210},
+			},
+			{
+				Name:         xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 13, Column: 3, Offset: 213},
+				End:          xmltokenizer.Pos{Line: 13, Column: 10, Offset: 220},
 			},
 			{
 				Name:         xmltokenizer.Name{Local: []byte("content"), Full: []byte("content")},
 				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 14, Column: 1, Offset: 221},
+				End:          xmltokenizer.Pos{Line: 14, Column: 11, Offset: 231},
 			},
 		}},
 		{filename: filepath.Join("corrupted", "cdata_truncated.xml"), expecteds: []xmltokenizer.Token{
 			tokenHeader,
-			{Name: xmltokenizer.Name{Local: []byte("content"), Full: []byte("content")}},
 			{
-				Name: xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				Name:  xmltokenizer.Name{Local: []byte("content"), Full: []byte("content")},
+				Begin: xmltokenizer.Pos{Line: 2, Column: 1, Offset: 40},
+				End:   xmltokenizer.Pos{Line: 2, Column: 10, Offset: 49},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("data"), Full: []byte("data")},
+				Begin: xmltokenizer.Pos{Line: 3, Column: 3, Offset: 53},
+				End:   xmltokenizer.Pos{Line: 3, Column: 9, Offset: 59},
 			},
 		},
 			err: io.ErrUnexpectedEOF,
 		},
 		{filename: "self_closing.xml", expecteds: []xmltokenizer.Token{
 			tokenHeader,
-			{Name: xmltokenizer.Name{Local: []byte("a"), Full: []byte("a")}, SelfClosing: true},
-			{Name: xmltokenizer.Name{Local: []byte("b"), Full: []byte("b")}, SelfClosing: true},
+			{
+				Name:        xmltokenizer.Name{Local: []byte("a"), Full: []byte("a")},
+				SelfClosing: true,
+				Begin:       xmltokenizer.Pos{Line: 2, Column: 1, Offset: 39},
+				End:         xmltokenizer.Pos{Line: 2, Column: 6, Offset: 44},
+			},
+			{
+				Name:        xmltokenizer.Name{Local: []byte("b"), Full: []byte("b")},
+				SelfClosing: true,
+				Begin:       xmltokenizer.Pos{Line: 3, Column: 1, Offset: 45},
+				End:         xmltokenizer.Pos{Line: 3, Column: 5, Offset: 49},
+			},
 		}},
 		{filename: "copyright_header.xml", expecteds: []xmltokenizer.Token{
-			{Data: []byte("<!--\n  Copyright 2024 Example Licence Authors.\n-->"), SelfClosing: true},
-			tokenHeader,
+			{
+				Data:        []byte("<!--\n  Copyright 2024 Example Licence Authors.\n-->"),
+				SelfClosing: true,
+				Begin:       xmltokenizer.Pos{Line: 1, Column: 1, Offset: 0},
+				End:         xmltokenizer.Pos{Line: 3, Column: 4, Offset: 50},
+			},
+			{
+				Data:        []byte(`<?xml version="1.0" encoding="UTF-8"?>`),
+				SelfClosing: true,
+				Begin:       xmltokenizer.Pos{Line: 4, Column: 1, Offset: 51},
+				End:         xmltokenizer.Pos{Line: 4, Column: 39, Offset: 89},
+			},
 		}},
 		{filename: "dtd.xml", expecteds: []xmltokenizer.Token{
 			tokenHeader,
@@ -483,19 +605,80 @@ func TestTokenWithSmallXMLFiles(t *testing.T) {
 					"  <!ENTITY copyright \"Copyright: W3Schools.\">\n" +
 					"]>"),
 				SelfClosing: true,
+				Begin:       xmltokenizer.Pos{2, 1, 39},
+				End:         xmltokenizer.Pos{6, 3, 172},
 			},
-			{Name: xmltokenizer.Name{Local: []byte("note"), Full: []byte("note")}},
-			{Name: xmltokenizer.Name{Local: []byte("to"), Full: []byte("to")}, Data: []byte("Tove")},
-			{Name: xmltokenizer.Name{Local: []byte("to"), Full: []byte("to")}, IsEndElement: true},
-			{Name: xmltokenizer.Name{Local: []byte("from"), Full: []byte("from")}, Data: []byte("Jani")},
-			{Name: xmltokenizer.Name{Local: []byte("from"), Full: []byte("from")}, IsEndElement: true},
-			{Name: xmltokenizer.Name{Local: []byte("heading"), Full: []byte("heading")}, Data: []byte("Reminder")},
-			{Name: xmltokenizer.Name{Local: []byte("heading"), Full: []byte("heading")}, IsEndElement: true},
-			{Name: xmltokenizer.Name{Local: []byte("body"), Full: []byte("body")}, Data: []byte("Don't forget me this weekend!")},
-			{Name: xmltokenizer.Name{Local: []byte("body"), Full: []byte("body")}, IsEndElement: true},
-			{Name: xmltokenizer.Name{Local: []byte("footer"), Full: []byte("footer")}, Data: []byte("&writer;&nbsp;&copyright;")},
-			{Name: xmltokenizer.Name{Local: []byte("footer"), Full: []byte("footer")}, IsEndElement: true},
-			{Name: xmltokenizer.Name{Local: []byte("note"), Full: []byte("note")}, IsEndElement: true},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("note"), Full: []byte("note")},
+				Begin: xmltokenizer.Pos{8, 1, 174},
+				End:   xmltokenizer.Pos{8, 7, 180},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("to"), Full: []byte("to")},
+				Data:  []byte("Tove"),
+				Begin: xmltokenizer.Pos{9, 3, 183},
+				End:   xmltokenizer.Pos{9, 11, 191},
+			},
+			{
+				Name:         xmltokenizer.Name{Local: []byte("to"), Full: []byte("to")},
+				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{9, 11, 191},
+				End:          xmltokenizer.Pos{9, 16, 196},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("from"), Full: []byte("from")},
+				Data:  []byte("Jani"),
+				Begin: xmltokenizer.Pos{10, 3, 199},
+				End:   xmltokenizer.Pos{10, 13, 209},
+			},
+			{
+				Name:         xmltokenizer.Name{Local: []byte("from"), Full: []byte("from")},
+				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 10, Column: 13, Offset: 209},
+				End:          xmltokenizer.Pos{Line: 10, Column: 20, Offset: 216},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("heading"), Full: []byte("heading")},
+				Data:  []byte("Reminder"),
+				Begin: xmltokenizer.Pos{11, 3, 219},
+				End:   xmltokenizer.Pos{11, 20, 236},
+			},
+			{
+				Name:         xmltokenizer.Name{Local: []byte("heading"), Full: []byte("heading")},
+				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{11, 20, 236},
+				End:          xmltokenizer.Pos{11, 30, 246},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("body"), Full: []byte("body")},
+				Data:  []byte("Don't forget me this weekend!"),
+				Begin: xmltokenizer.Pos{12, 3, 249},
+				End:   xmltokenizer.Pos{12, 38, 284},
+			},
+			{
+				Name:         xmltokenizer.Name{Local: []byte("body"), Full: []byte("body")},
+				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{12, 38, 284},
+				End:          xmltokenizer.Pos{12, 45, 291},
+			},
+			{
+				Name:  xmltokenizer.Name{Local: []byte("footer"), Full: []byte("footer")},
+				Data:  []byte("&writer;&nbsp;&copyright;"),
+				Begin: xmltokenizer.Pos{Line: 13, Column: 3, Offset: 294},
+				End:   xmltokenizer.Pos{Line: 13, Column: 36, Offset: 327},
+			},
+			{
+				Name:         xmltokenizer.Name{Local: []byte("footer"), Full: []byte("footer")},
+				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 13, Column: 36, Offset: 327},
+				End:          xmltokenizer.Pos{Line: 13, Column: 45, Offset: 336},
+			},
+			{
+				Name:         xmltokenizer.Name{Local: []byte("note"), Full: []byte("note")},
+				IsEndElement: true,
+				Begin:        xmltokenizer.Pos{Line: 14, Column: 1, Offset: 337},
+				End:          xmltokenizer.Pos{Line: 14, Column: 8, Offset: 344},
+			},
 		}},
 	}
 
@@ -507,25 +690,32 @@ func TestTokenWithSmallXMLFiles(t *testing.T) {
 				panic(err)
 			}
 			defer f.Close()
-
-			tok := xmltokenizer.New(f, xmltokenizer.WithReadBufferSize(1))
-			for i := 0; ; i++ {
-				token, err := tok.Token()
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					if !errors.Is(err, tc.err) {
-						t.Fatalf("expected error: %v, got: %v", tc.err, err)
-					}
-					return
-				}
-
-				if diff := cmp.Diff(token, tc.expecteds[i]); diff != "" {
-					t.Fatal(diff)
-				}
-			}
+			checkTokens(t, f, tc.expecteds, tc.err)
 		})
+	}
+}
+
+func checkTokens(t *testing.T, r io.Reader, expected []xmltokenizer.Token, expectedErr error) {
+	t.Helper()
+	tok := xmltokenizer.New(r, xmltokenizer.WithReadBufferSize(1))
+	for j := 0; ; j++ {
+		token, err := tok.Token()
+		if err == io.EOF {
+			if j != len(expected) {
+				t.Errorf("too few tokens; wanted %d but got %d", len(expected), j)
+			}
+			break
+		}
+		if err != nil {
+			if !errors.Is(err, expectedErr) {
+				t.Fatalf("expected error: %v, got: %v", expectedErr, err)
+			}
+			return
+		}
+
+		if diff := cmp.Diff(token, expected[j]); diff != "" {
+			t.Errorf("token #%d: got %#v; diff: %s", j+1, token, diff)
+		}
 	}
 }
 
