@@ -296,6 +296,35 @@ func TestTokenWithInmemXML(t *testing.T) {
 			},
 		},
 		{
+			name: "single quote attribute",
+			xml:  `<sample foo='bar' baz='"quux"'/>`,
+			expecteds: []xmltokenizer.Token{
+				{
+					Name: xmltokenizer.Name{
+						Local: []uint8("sample"),
+						Full:  []uint8("sample"),
+					},
+					Attrs: []xmltokenizer.Attr{
+						{
+							Name: xmltokenizer.Name{
+								Local: []uint8("foo"),
+								Full:  []uint8("foo")},
+							Value: []uint8("bar"),
+						},
+						{
+							Name: xmltokenizer.Name{
+								Local: []uint8("baz"),
+								Full:  []uint8("baz")},
+							Value: []uint8("\"quux\""),
+						},
+					},
+					SelfClosing: true,
+					Begin:       xmltokenizer.Pos{1, 1, 0},
+					End:         xmltokenizer.Pos{1, 33, 32},
+				},
+			},
+		},
+		{
 			name: "slash inside attribute value",
 			xml:  `<sample path="foo/bar/baz">`,
 			expecteds: []xmltokenizer.Token{

@@ -243,15 +243,16 @@ func (t *Tokenizer) findTokenEnd(pivot int) int {
 				continue
 			}
 		}
-		if bytes.Count(t.buf[left:right], []byte{'"'})%2 == 0 {
+		if bytes.Count(t.buf[left:right], []byte{'"'})%2 == 0 && bytes.Count(t.buf[left:right], []byte{'\''})%2 == 0 {
 			return right
 		}
-		// this > is within a quoted value, scan to closing quote
-		p := bytes.IndexByte(t.buf[right:], '"')
+		// this > might be within a quoted value, scan to closing quote
+		p := bytes.IndexAny(t.buf[left:right], "'\"")
+		p = bytes.IndexByte(t.buf[left+p+1:], t.buf[left+p])
 		if p == -1 {
 			return -1
 		}
-		left = right + p + 1
+		left += p + 2
 	}
 }
 
@@ -389,8 +390,8 @@ func (t *Tokenizer) consumeAttrs(b []byte) []byte {
 		}
 		full := trim(b[:pos])
 		b = b[pos+1:]
-		pos = bytes.IndexByte(b, '"')
-		width := bytes.IndexByte(b[pos+1:], '"')
+		pos = bytes.IndexAny(b, "'\"")
+		width := bytes.IndexByte(b[pos+1:], b[pos])
 		value := b[pos+1 : pos+width+1]
 		b = b[pos+width+2:]
 		colon := bytes.IndexByte(full, ':')
