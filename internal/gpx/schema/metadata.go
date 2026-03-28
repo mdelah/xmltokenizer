@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/muktihari/xmltokenizer"
+	"github.com/mdelah/xmltokenizer"
 )
 
 // Metadata is GPX's Metadata schema (simplified).

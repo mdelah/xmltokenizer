@@ -13,10 +13,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/muktihari/xmltokenizer"
-	"github.com/muktihari/xmltokenizer/internal/gpx"
-	"github.com/muktihari/xmltokenizer/internal/xlsx"
-	"github.com/muktihari/xmltokenizer/internal/xlsx/schema"
+	"github.com/mdelah/xmltokenizer"
+	"github.com/mdelah/xmltokenizer/internal/gpx"
+	"github.com/mdelah/xmltokenizer/internal/xlsx"
+	"github.com/mdelah/xmltokenizer/internal/xlsx/schema"
 )
 
 var tokenHeader = xmltokenizer.Token{

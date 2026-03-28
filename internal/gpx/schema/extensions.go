@@ -6,7 +6,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/muktihari/xmltokenizer"
+	"github.com/mdelah/xmltokenizer"
 )
 
 // TrackpointExtension is a GPX extension for health-related data.

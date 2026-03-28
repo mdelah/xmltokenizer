@@ -1,4 +1,4 @@
-module github.com/muktihari/xmltokenizer
+module github.com/mdelah/xmltokenizer
 
 go 1.21
 

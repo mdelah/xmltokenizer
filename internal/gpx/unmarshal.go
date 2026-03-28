@@ -4,8 +4,8 @@ import (
 	"encoding/xml"
 	"io"
 
-	"github.com/muktihari/xmltokenizer"
-	"github.com/muktihari/xmltokenizer/internal/gpx/schema"
+	"github.com/mdelah/xmltokenizer"
+	"github.com/mdelah/xmltokenizer/internal/gpx/schema"
 )
 
 func UnmarshalWithXMLTokenizer(f io.Reader) (schema.GPX, error) {

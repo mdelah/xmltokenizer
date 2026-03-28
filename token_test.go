@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/muktihari/xmltokenizer"
+	"github.com/mdelah/xmltokenizer"
 )
 
 func TestGetToken(t *testing.T) {

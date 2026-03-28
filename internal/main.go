@@ -6,7 +6,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/muktihari/xmltokenizer"
+	"github.com/mdelah/xmltokenizer"
 )
 
 const sample = `<?xml version="1.0" encoding="UTF-8"?>

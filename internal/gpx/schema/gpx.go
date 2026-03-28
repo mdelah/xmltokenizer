@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/muktihari/xmltokenizer"
+	"github.com/mdelah/xmltokenizer"
 )
 
 // GPX is GPX schema (simplified).
